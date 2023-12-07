@@ -1,0 +1,26 @@
+MERFISH=/mnt/beegfs/merfish
+GLUSTER_MERFISH=/mnt/glustergv0/MERFISH
+
+function scat {
+  file_name="$1"
+  folder_list=("/mnt/beegfs/merfish/logs" "/mnt/beegfs/userdata/$USER/.jobs_outputs" "/mnt/beegfs/merfish/sopa/workflow/logs")
+
+  for folder in "${folder_list[@]}"; do
+    if [ -d "$folder" ]; then
+      file_path="$folder/$file_name"
+      if [ -e "$file_path" ]; then
+        cat "$file_path"
+        return 0
+      fi
+    fi
+  done
+
+  echo "File not found"
+  return 1
+}
+
+export PATH=$PATH:/mnt/beegfs/merfish/sopa/cli
+
+umask 006
+
+alias baysor="/mnt/beegfs/merfish/bin/baysor/bin/baysor"

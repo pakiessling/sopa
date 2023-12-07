@@ -1,0 +1,24 @@
+name: sopa-igr
+help: "CLI for preprocessing image-based spatial omics data @GustaveRoussy\nAuthor: Quentin Blampey (CentraleSupélec x IGR x PRISM)"
+version: 0.0.1
+
+commands:
+- name: run
+  help: Runs the pipeline on one region (prompts the user for inputs)
+
+- name: status
+  help: Shows the pipeline status for all regions
+
+  args:
+  - name: tissue
+    help: Name of the tissue to consider (e.g., breast/thyroid)
+
+- name: log
+  help: Shows a pipeline log file (by default, shows the last one) or a job output
+
+  args:
+    - name: file
+      help: Name of the log file to consider (or index, sorted by inverse creation time)
+
+- name: update
+  help: Pulls changes from the sopa repository
