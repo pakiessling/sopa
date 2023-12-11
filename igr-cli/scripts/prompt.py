@@ -72,7 +72,7 @@ def prompt():
 
     config_dir = inquirer.fuzzy(
         message="Select a technology for the config:",
-        choices=search(workflow_dir / "config", is_dir=False, suffix=".toml"),
+        choices=search(workflow_dir / "config"),
     ).execute()
 
     config_path = inquirer.fuzzy(
