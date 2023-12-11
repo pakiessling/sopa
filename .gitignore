@@ -65,7 +65,7 @@ downloads/
 eggs/
 .eggs/
 lib/
-!cli/src/lib
+!igr-cli/src/lib
 lib64/
 parts/
 sdist/

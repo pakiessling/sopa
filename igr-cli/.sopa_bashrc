@@ -19,7 +19,7 @@ function scat {
   return 1
 }
 
-export PATH=$PATH:/mnt/beegfs/merfish/sopa/cli
+export PATH=$PATH:/mnt/beegfs/merfish/sopa/igr-cli
 
 umask 006
 

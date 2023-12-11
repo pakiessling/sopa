@@ -11,7 +11,7 @@ The pipeline can be run by executing the `sopa-igr` file, i.e.
 ```sh
 ./sopa-igr
 ```
-**On flamingo**, there is an alias inside `/mnt/beegfs/merfish/sopa/cli/.sopa_bashrc` so that the CLI is called by running only `sopa-igr`. For instance, you can run the following line to get a helper:
+**On flamingo**, there is an alias inside `/mnt/beegfs/merfish/sopa/igr-cli/.sopa_bashrc` so that the CLI is called by running only `sopa-igr`. For instance, you can run the following line to get a helper:
 
 ```sh
 sopa-igr -h
