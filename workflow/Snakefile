@@ -16,7 +16,12 @@ rule all:
 
 rule to_spatialdata:
     input:
-        paths.data_path,
+        "{config['data_path']}/images/micron_to_mosaic_pixel_transform.csv",
+        "{config['data_path']}/detected_transcripts.csv",
+        "{config['data_path']}/images/mosaic_DAPI_z3.tif",
+        "{config['data_path']}/images/mosaic_PolyT_z3.tif",
+        "{config['data_path']}/images/mosaic_Cellbound2_z3.tif",
+        "{config['data_path']}/images/mosaic_Cellbound3_z3.tif",
     output:
         paths.sdata_zgroup if paths.data_path else [],
     conda:
@@ -223,8 +228,8 @@ rule explorer:
 
 rule copy_data:
     output:
-        f"{config['data_path']}/images/micron_to_mosaic_pixel_transform.csv",
-        f"{config['data_path']}/detected_transcripts.csv",
+        "{config['data_path']}/images/micron_to_mosaic_pixel_transform.csv",
+        "{config['data_path']}/detected_transcripts.csv",
     shell:
         """
         cp {config['cold_data_path']}/images/micron_to_mosaic_pixel_transform.csv {config['data_path']}/images/micron_to_mosaic_pixel_transform.csv
@@ -233,10 +238,10 @@ rule copy_data:
 
 rule copy_images:
     output:
-        f"{config['data_path']}/images/mosaic_DAPI_z3.tif",
-        f"{config['data_path']}/images/mosaic_PolyT_z3.tif",
-        f"{config['data_path']}/images/mosaic_Cellbound2_z3.tif",
-        f"{config['data_path']}/images/mosaic_Cellbound3_z3.tif",
+        "{config['data_path']}/images/mosaic_DAPI_z3.tif",
+        "{config['data_path']}/images/mosaic_PolyT_z3.tif",
+        "{config['data_path']}/images/mosaic_Cellbound2_z3.tif",
+        "{config['data_path']}/images/mosaic_Cellbound3_z3.tif",
     shell:
         """
         cp {config['cold_data_path']}/images/mosaic_DAPI_z3.tif {config['data_path']}/images/mosaic_DAPI_z3.tif
