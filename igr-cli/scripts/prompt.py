@@ -36,14 +36,11 @@ def run(data_path, config_path):
 
     print(f"Starting pipeline... (you can exit with ctrl+a+d)")
     try:
-        print(
-            f"""snakemake --config data_path={data_path} --configfile={config_path} --profile slurm --rerun-triggers mtime params input code"""
+        subprocess.run(
+            f"""snakemake --config data_path={data_path} --configfile={config_path} --profile slurm --rerun-triggers mtime params input code""",
+            shell=True,
+            check=True,
         )
-        # subprocess.run(
-        #     f"""snakemake --config data_path={data_path} --configfile={config_path} --profile slurm --rerun-triggers mtime params input code""",
-        #     shell=True,
-        #     check=True,
-        # )
     except Exception as e:
         print(e)
 
