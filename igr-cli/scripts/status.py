@@ -41,14 +41,14 @@ def main(args):
         tissues = subdir(DATA_PATH)
 
     for tissue in tissues:
+        if tissue.name in ["reference", "macsima", "verification"]:
+            continue
+
         name = f"Tissue: {tissue.name}"
         print(name)
         print("-" * len(name))
 
         for slide in subdir(tissue):
-            if slide.name in ["reference", "macsima"]:
-                continue
-
             print(f"Slide {slide.name}")
 
             for i in range(4):
