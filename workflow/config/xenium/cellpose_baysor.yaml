@@ -14,6 +14,7 @@ segmentation:
     channels: [0]
     flow_threshold: 2
     cellprob_threshold: -6
+    min_area: 400
 
   baysor:
     config:
@@ -41,18 +42,20 @@ segmentation:
         new_component_weight: 0.2
         new_component_fraction: 0.3
 
-annotation:
-  method: tangram
-  args:
-    sc_reference_path: /mnt/beegfs/merfish/data/reference/2023_Reference_disco_pancreas_healthy.h5ad
-    cell_type_key: ct
-
 aggregate:
+  average_intensities: true
+  
+# Comment this out if you want to use tangram -->
 
+# annotation:
+#   method: tangram
+#   args:
+#     sc_reference_path: "..."
+#     cell_type_key: ct
 
 explorer:
   gene_column: "feature_name"
   ram_threshold_gb: 16
 
 executables:
-  baysor: /mnt/beegfs/merfish/bin/baysor/bin/baysor
+  baysor: ~/.julia/bin/baysor # if you run baysor, put here the path to the baysor executable

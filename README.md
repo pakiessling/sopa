@@ -4,19 +4,19 @@
 
 [![PyPI](https://img.shields.io/pypi/v/sopa.svg)](https://pypi.org/project/sopa)
 [![Downloads](https://static.pepy.tech/badge/sopa)](https://pepy.tech/project/sopa)
-[![Docs](https://img.shields.io/badge/docs-mkdocs-blue)](TODO)
+[![Docs](https://img.shields.io/badge/docs-mkdocs-blue)](https://gustaveroussy.github.io/sopa)
 ![Build](https://github.com/MICS-Lab/sopa/workflows/ci/badge.svg)
 [![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
 [![License](https://img.shields.io/pypi/l/sopa.svg)](https://github.com/gustaveroussy/sopa/blob/master/LICENSE)
 [![Imports: isort](https://img.shields.io/badge/imports-isort-blueviolet)](https://pycqa.github.io/isort/)
 
-**S**patial-**o**mics **p**ipeline and **a**nalysis in Python. Built on top of [SpatialData](https://github.com/scverse/spatialdata), it enables processing and analyses of **any** imaging-based spatial-omics using a standard data structure and output. Sopa was designed for generability and low-memory consumption on large images (scales to `1TB+` images).
+**S**patial-**o**mics **p**ipeline and **a**nalysis in Python. Built on top of [SpatialData](https://github.com/scverse/spatialdata), it enables processing and analyses of **any** image-based spatial-omics using a standard data structure and output. Sopa was designed for generability and low-memory consumption on large images (scales to `1TB+` images).
 
-The pipeline outputs are composed of (i) Xenium Explorer files for interactive visualization, (ii) a HTML report for quick quality controls, and (iii) a SpatialData `.zarr` directory for further analyses.
+The pipeline outputs contain: (i) Xenium Explorer files for interactive visualization, (ii) a HTML report for quick quality controls, and (iii) a SpatialData `.zarr` directory for further analyses.
 
 # Documentation
 
-The easiest way to getting started with `sopa` is to check [our documentation](TODO). It contains installation explainations, CLI/API details, and usages examples.
+The easiest way to getting started with `sopa` is to check [our documentation](https://gustaveroussy.github.io/sopa). It contains installation explainations, CLI/API details, and usages examples.
 
 # Overview
 
@@ -29,7 +29,7 @@ The following illustration describes the main steps of `sopa`:
 # Installation
 
 ### PyPI installation
-Sopa can be installed via `PyPI` on all operating system. Make sure you have an environment with `python==3.10`, and run the following command:
+Sopa can be installed via `PyPI` on all operating system. Make sure you have an environment with `python==3.10` (more versions will be soon supported), and run the following command:
 ```
 pip install sopa
 ```
@@ -61,10 +61,10 @@ Clone our repository, choose a config [here](https://github.com/gustaveroussy/so
 ```bash
 git clone https://github.com/gustaveroussy/sopa.git
 cd sopa/workflow
-snakemake --configfile=/path/to/yaml_config --config data_path=/path/to/data_directory
+snakemake --configfile=/path/to/yaml_config --config data_path=/path/to/data_directory --cores 1 --use-conda
 ```
 
-For more details on `snakemake` configuration and how to properly setup your environments, please refer to the [documentation](TODO).
+For more details on `snakemake` configuration and how to properly setup your environments, please refer to the [documentation](https://gustaveroussy.github.io/sopa/pipeline).
 
 ### CLI
 
@@ -80,17 +80,17 @@ Below are example of commands that can be run with the `sopa` CLI:
 > sopa explorer write merscope_directory.zarr # convert for interactive viz
 ```
 
-For a full description of the CLI, please refer to the [documentation](TODO).
+For a full description of the CLI, please refer to the [documentation](https://gustaveroussy.github.io/sopa/cli).
 
 ### API
 
 ```python
 import sopa
 
-# use the 'sopa' package
+# use the 'sopa' python package
 ```
 
-For a full description of the API, please refer to the [documentation](TODO).
+For a full description of the API, please refer to the [documentation](https://gustaveroussy.github.io/sopa).
 
 # Cite us
 Our article is not published yet. In the meantime, you can cite our **preprint**: TODO
