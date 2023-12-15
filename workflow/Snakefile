@@ -3,14 +3,11 @@ from utils import WorkflowPaths, Args
 paths = WorkflowPaths(config)
 args = Args(paths, config)
 
-localrules: all
+localrules: all, copy_data, copy_images, save
 
 rule all:
     input:
-        paths.annotations if args.annotate else [],
-        paths.explorer_experiment,
-        paths.explorer_image,
-        paths.report,
+        paths.processed_adata,
     shell:
         """
         echo SpatialData output directory: {paths.sdata_path}
@@ -218,4 +215,45 @@ rule explorer:
     shell:
         """
         sopa explorer write {paths.sdata_path} --output-path {paths.explorer_directory} {params.args_explorer} --mode '-i'
+        """
+
+#########################
+### MERSCOPE specific ###
+#########################
+
+rule copy_data:
+    output:
+        f"{config['data_path']}/images/micron_to_mosaic_pixel_transform.csv",
+        f"{config['data_path']}/detected_transcripts.csv",
+    shell:
+        """
+        cp {config['cold_data_path']}/images/micron_to_mosaic_pixel_transform.csv {config['data_path']}/images/micron_to_mosaic_pixel_transform.csv
+        cp {config['cold_data_path']}/detected_transcripts.csv {config['data_path']}/detected_transcripts.csv
+        """
+
+rule copy_images:
+    output:
+        f"{config['data_path']}/images/mosaic_DAPI_z3.tif",
+        f"{config['data_path']}/images/mosaic_PolyT_z3.tif",
+        f"{config['data_path']}/images/mosaic_Cellbound2_z3.tif",
+        f"{config['data_path']}/images/mosaic_Cellbound3_z3.tif",
+    shell:
+        """
+        cp {config['cold_data_path']}/images/mosaic_DAPI_z3.tif {config['data_path']}/images/mosaic_DAPI_z3.tif
+        cp {config['cold_data_path']}/images/mosaic_PolyT_z3.tif {config['data_path']}/images/mosaic_PolyT_z3.tif
+        cp {config['cold_data_path']}/images/mosaic_Cellbound2_z3.tif {config['data_path']}/images/mosaic_Cellbound2_z3.tif
+        cp {config['cold_data_path']}/images/mosaic_Cellbound3_z3.tif {config['data_path']}/images/mosaic_Cellbound3_z3.tif
+        """
+
+rule save:
+    input:
+        paths.annotations if args.annotate else [],
+        paths.explorer_experiment,
+        paths.explorer_image,
+        paths.report,
+    output:
+        paths.processed_adata,
+    shell:
+        """
+        cp -rT {paths.explorer_directory} {config["processed_data_path"]}
         """

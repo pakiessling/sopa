@@ -46,6 +46,9 @@ def main(args):
         print("-" * len(name))
 
         for slide in subdir(tissue):
+            if slide.name in ["reference", "macsima"]:
+                continue
+
             print(f"Slide {slide.name}")
 
             for i in range(4):
@@ -57,9 +60,7 @@ def main(args):
                         PROCESSED_PATH / tissue.name / slide.name / f"{region.name}.explorer"
                     )
 
-                    print(
-                        f"        {region.name}: {get_suffix(processed_dir, explorer_dir, zarr_dir)}"
-                    )
+                    print(f"    {region.name}: {get_suffix(processed_dir, explorer_dir, zarr_dir)}")
             print()
 
 

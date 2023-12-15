@@ -8,7 +8,26 @@ class ConfigConstants:
     ANNOTATION = "annotation"
 
 
+def _flamingo_check_config(config: dict) -> dict:
+    data_path = Path(config["data_path"])
+
+    region = data_path.name
+    slide = data_path.parent.name
+    tissue = data_path.parents[1].name
+
+    config["cold_data_path"] = Path("/mnt/glustergv0/MERFISH/data") / tissue / slide / region
+    config["processed_data_path"] = (
+        Path("/mnt/glustergv0/MERFISH/processed") / tissue / slide / f"{region}.explorer"
+    )
+
+    print("Paths:", config["data_path"], config["cold_data_path"], config["processed_data_path"])
+
+    return config
+
+
 def _sanity_check_config(config: dict):
+    config = _flamingo_check_config(config)
+
     assert (
         "data_path" in config or "sdata_path" in config
     ), "Invalid config. Provide '--config data_path=...' when running the pipeline"
@@ -76,6 +95,8 @@ class WorkflowPaths:
         self.explorer_image = self.explorer_directory / "morphology.ome.tif"
 
         self.report = self.explorer_directory / "analysis_summary.html"
+
+        self.processed_adata = str(self.config["processed_data_path"] / "adata.h5ad")
 
     def cells_paths(self, file_content: str, name, dirs: bool = False):
         if name == "cellpose":
