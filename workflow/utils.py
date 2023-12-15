@@ -20,8 +20,6 @@ def _flamingo_check_config(config: dict) -> dict:
         Path("/mnt/glustergv0/MERFISH/processed") / tissue / slide / f"{region}.explorer"
     )
 
-    print("Paths:", config["data_path"], config["cold_data_path"], config["processed_data_path"])
-
     return config
 
 
