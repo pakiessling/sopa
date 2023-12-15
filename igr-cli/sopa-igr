@@ -21,11 +21,11 @@ sopa_igr_usage() {
     printf "sopa-igr\n"
     echo
 
-    printf "  CLI for preprocessing MERFISH data @GustaveRoussy\n  Author: Quentin Blampey (CentraleSupélec x IGR x PRISM)\n"
+    printf "  CLI for preprocessing image-based spatial omics data @GustaveRoussy\n  Author: Quentin Blampey (CentraleSupélec x IGR x PRISM)\n"
     echo
 
   else
-    printf "sopa-igr - CLI for preprocessing MERFISH data @GustaveRoussy\n"
+    printf "sopa-igr - CLI for preprocessing image-based spatial omics data @GustaveRoussy\n"
     echo
 
   fi
@@ -283,7 +283,7 @@ sopa_igr_run_command() {
       module load anaconda3 &&\
       source activate snakemake &&\
       cd /mnt/beegfs/merfish/sopa/workflow &&\
-      python /mnt/beegfs/merfish/sopa/cli/scripts/prompt.py &&\
+      python /mnt/beegfs/merfish/sopa/igr-cli/scripts/prompt.py &&\
       echo 'Exiting screen in 60s...(or run ctrl+C to exit now)' &&\
       sleep 60"
 }
@@ -294,7 +294,7 @@ sopa_igr_status_command() {
   TISSUE=${args[tissue]}
 
   module load anaconda3
-  python /mnt/beegfs/merfish/sopa/cli/scripts/status.py -t $TISSUE
+  python /mnt/beegfs/merfish/sopa/igr-cli/scripts/status.py -t $TISSUE
 }
 
 # :command.function
@@ -327,7 +327,7 @@ sopa_igr_log_command() {
 # :command.function
 sopa_igr_update_command() {
   # src/update_command.sh
-  git -C /mnt/beegfs/merfish/sopa pull origin master
+  git -C /mnt/beegfs/merfish/sopa pull origin igr
 }
 
 # :command.parse_requirements
