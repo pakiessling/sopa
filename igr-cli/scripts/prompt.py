@@ -45,11 +45,6 @@ def run(data_path, config_path):
         print(e)
 
 
-def parse_history(history):
-    with open(history, "r") as f:
-        return [line.split() for line in f.readlines()]
-
-
 def prompt():
     sopa_dir = Path(__file__).parents[2]
     workflow_dir = sopa_dir / "workflow"
