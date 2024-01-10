@@ -1,14 +1,23 @@
 site_name: Sopa
-repo_name: sopa
+repo_name: gustaveroussy/sopa
+repo_url: https://github.com/gustaveroussy/sopa
 copyright: Copyright &copy; 2023 - 2024 Quentin Blampey
 theme:
   name: material
   logo: assets/sopa_small_white.png
   favicon: assets/sopa_favicon.png
+  features:
+    - content.code.annotate
 nav:
   - Home: index.md
   - Getting Started: getting_started.md
-  - Snakemake pipeline: pipeline.md
+  - Tutorials:
+    - Snakemake pipeline: tutorials/snakemake.md
+    - CLI usage: tutorials/cli_usage.md
+    - API usage: tutorials/api_usage.md
+    - Spatial statistics: tutorials/stats.md
+    - Align images (e.g. H&E): tutorials/align.md
+    - Advanced segmentation: tutorials/advanced_segmentation.md
   - CLI: cli.md
   - API:
     - sopa.stats: api/stats.md
@@ -30,7 +39,7 @@ nav:
       - sopa.utils.image: api/utils/image.md
       - sopa.utils.polygon_crop: api/utils/polygon_crop.md
     - sopa._sdata: api/_sdata.md
-  - Toy examples: toy.md
+  - Frequently asked questions: faq.md
   - Cite us: cite_us.md
 plugins:
   - search

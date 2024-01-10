@@ -34,18 +34,30 @@ log = logging.getLogger(__name__)
 class Aggregator:
     """Perform transcript count and channel averaging over a `SpatialData` object"""
 
-    def __init__(self, sdata: SpatialData, overwrite: bool = True, image_key: str | None = None):
+    def __init__(
+        self,
+        sdata: SpatialData,
+        overwrite: bool = True,
+        image_key: str | None = None,
+        shapes_key: str | None = None,
+    ):
         """
         Args:
             sdata: A `SpatialData` object
             overwrite: If `True`, will overwrite `sdata.table` if already existing
             image_key: Key of `sdata` with the image to be averaged. If only one image, this does not have to be provided.
+            shapes_key: Key of `sdata` with the shapes corresponding to the cells boundaries
         """
         self.sdata = sdata
         self.overwrite = overwrite
 
         self.image_key, self.image = get_spatial_image(sdata, image_key, return_key=True)
-        self.shapes_key, self.geo_df = get_boundaries(sdata, return_key=True)
+
+        if shapes_key is None:
+            self.shapes_key, self.geo_df = get_boundaries(sdata, return_key=True)
+        else:
+            self.shapes_key = shapes_key
+            self.geo_df = self.sdata[shapes_key]
 
         if sdata.table is not None and len(self.geo_df) != sdata.table.n_obs:
             log.warn(
@@ -120,7 +132,7 @@ class Aggregator:
 
         if gene_column is not None:
             if self.table is not None:
-                log.warn("sdata.table is already existing. Transcripts are not count.")
+                log.warn("sdata.table is already existing. Transcripts are not count again.")
             else:
                 self.table = count_transcripts(self.sdata, gene_column, shapes_key=self.shapes_key)
 
@@ -156,7 +168,7 @@ class Aggregator:
                     index=self.table.obs_names,
                 )
 
-        self.table.uns["sopa_attrs"] = {
+        self.table.uns[SopaKeys.UNS_KEY] = {
             "version": sopa.__version__,
             SopaKeys.UNS_HAS_TRANSCRIPTS: does_count,
             SopaKeys.UNS_HAS_INTENSITIES: average_intensities,
@@ -190,23 +202,28 @@ def average_channels(
 
     expand_radius = expand_radius_ratio * np.mean(np.sqrt(geo_df.area / np.pi))
 
-    cells = list(geo_df.geometry)
-    cells = shapes.expand(cells, expand_radius)
+    if expand_radius > 0:
+        geo_df = geo_df.buffer(expand_radius)
 
-    log.info(f"Averaging channels intensity over {len(cells)} cells with expansion {expand_radius}")
-    return _average_channels_aligned(image, cells)
+    log.info(
+        f"Averaging channels intensity over {len(geo_df)} cells with expansion {expand_radius}"
+    )
+    return _average_channels_aligned(image, geo_df)
 
 
-def _average_channels_aligned(image: SpatialImage, cells: list[Polygon]):
+def _average_channels_aligned(
+    image: SpatialImage, geo_df: gpd.GeoDataFrame | list[Polygon]
+) -> np.ndarray:
     """Average channel intensities per cell. The image and cells have to be aligned, i.e. be on the same coordinate system.
 
     Args:
         image: A `SpatialImage` of shape `(n_channels, y, x)`
-        cells: A list of `shapely` polygons
+        geo_df: A `GeoDataFrame` whose geometries are cell boundaries (polygons)
 
     Returns:
         A numpy `ndarray` of shape `(n_cells, n_channels)`
     """
+    cells = geo_df if isinstance(geo_df, list) else list(geo_df.geometry)
     tree = shapely.STRtree(cells)
 
     intensities = np.zeros((len(cells), len(image.coords["c"])))

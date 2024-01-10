@@ -2,12 +2,6 @@ from pathlib import Path
 from typing import Optional
 
 
-class ConfigConstants:
-    CT_KEY = "cell_type"
-
-    ANNOTATION = "annotation"
-
-
 def _flamingo_check_config(config: dict) -> dict:
     data_path = Path(config["data_path"])
 
@@ -49,64 +43,64 @@ class WorkflowPaths:
     def __init__(self, config: dict) -> None:
         self.config = _sanity_check_config(config)
 
+        # spatialdata object files
         self.sdata_path = Path(self.config["sdata_path"])
         self.data_path = self.config["data_path"]
         self.sdata_zgroup = self.sdata_path / ".zgroup"  # trick to fix snakemake ChildIOException
 
+        # spatial elements directories
         self.shapes_dir = self.sdata_path / "shapes"
         self.points_dir = self.sdata_path / "points"
         self.images_dir = self.sdata_path / "images"
         self.table_dir = self.sdata_path / "table"
 
+        # sdata.shapes
         self.baysor_boundaries = self.shapes_dir / "baysor_boundaries"
         self.cellpose_boundaries = self.shapes_dir / "cellpose_boundaries"
         self.patches = self.shapes_dir / "sopa_patches"
 
-        self.smk_files = self.sdata_path / ".smk_files"
-        self.smk_table = self.smk_files / "table"
-        self.smk_patches = self.smk_files / "patches"
-        self.smk_patches_file_cellpose = self.smk_files / "patches_file_cellpose"
-        self.smk_patches_file_baysor = self.smk_files / "patches_file_baysor"
-        self.smk_cellpose_boundaries = self.smk_files / "cellpose_boundaries"
-        self.smk_baysor_boundaries = self.smk_files / "baysor_boundaries"
-        self.smk_aggregation = self.smk_files / "aggregation"
+        # snakemake cache / intermediate files
+        self.sopa_cache = self.sdata_path / ".sopa_cache"
+        self.smk_table = self.sopa_cache / "table"
+        self.smk_patches = self.sopa_cache / "patches"
+        self.smk_patches_file_image = self.sopa_cache / "patches_file_image"
+        self.smk_patches_file_baysor = self.sopa_cache / "patches_file_baysor"
+        self.smk_cellpose_temp_dir = self.sopa_cache / "cellpose_boundaries"
+        self.smk_baysor_temp_dir = self.sopa_cache / "baysor_boundaries"
+        self.smk_cellpose_boundaries = self.sopa_cache / "cellpose_boundaries_done"
+        self.smk_baysor_boundaries = self.sopa_cache / "baysor_boundaries_done"
+        self.smk_aggregation = self.sopa_cache / "aggregation"
 
+        # annotation files
         self.annotations = []
         if "annotation" in self.config:
-            self.annotations = (
-                self.table_dir
-                / "table"
-                / "obs"
-                / self.config["annotation"]
-                .get("args", {})
-                .get("cell_type_key", ConfigConstants.CT_KEY)
-            )
+            key = self.config["annotation"].get("args", {}).get("cell_type_key", "cell_type")
+            self.annotations = self.table_dir / "table" / "obs" / key
 
-        self.temp_dir = self.sdata_path.parent / f".smk_intermediate_{self.sdata_path.name}"
-        self.cellpose_temp_dir = self.temp_dir / "cellpose"
-        self.baysor_temp_dir = self.temp_dir / "baysor"
-
+        # user-friendly output files
         self.explorer_directory = self.sdata_path.with_suffix(".explorer")
         self.explorer_directory.mkdir(parents=True, exist_ok=True)
-
         self.explorer_experiment = self.explorer_directory / "experiment.xenium"
         self.explorer_image = self.explorer_directory / "morphology.ome.tif"
-
         self.report = self.explorer_directory / "analysis_summary.html"
 
         self.processed_adata = str(self.config["processed_data_path"] / "adata.h5ad")
 
     def cells_paths(self, file_content: str, name, dirs: bool = False):
         if name == "cellpose":
-            return [str(self.cellpose_temp_dir / f"{i}.zarr.zip") for i in range(int(file_content))]
+            return [
+                str(self.smk_cellpose_temp_dir / f"{i}.parquet") for i in range(int(file_content))
+            ]
         if name == "baysor":
             indices = map(int, file_content.split())
             BAYSOR_FILES = ["segmentation_polygons.json", "segmentation_counts.loom"]
 
             if dirs:
-                return [str(self.baysor_temp_dir / str(i)) for i in indices]
+                return [str(self.smk_baysor_temp_dir / str(i)) for i in indices]
             return [
-                str(self.baysor_temp_dir / str(i) / file) for i in indices for file in BAYSOR_FILES
+                str(self.smk_baysor_temp_dir / str(i) / file)
+                for i in indices
+                for file in BAYSOR_FILES
             ]
 
 
@@ -118,7 +112,15 @@ class Args:
         self.segmentation = "segmentation" in self.config
         self.cellpose = self.segmentation and "cellpose" in self.config["segmentation"]
         self.baysor = self.segmentation and "baysor" in self.config["segmentation"]
-        self.annotate = ConfigConstants.ANNOTATION in self.config
+        self.annotate = "annotation" in self.config and "method" in self.config["annotation"]
+
+        if self.baysor:
+            assert (
+                "executables" in config and "baysor" in config["executables"]
+            ), """When using baysor, please provide the path to the baysor executable in the config["executables"]["baysor"]"""
+            baysor_path = Path(config["executables"]["baysor"]).expanduser()
+            assert baysor_path.exists(), f"""Baysor executable {baysor_path} does not exist.\
+                \nCheck that you have installed baysor executable (as in https://github.com/kharchenkolab/Baysor), or update config["executables"]["baysor"] to use the right executable location"""
 
     def __getitem__(self, name):
         subconfig = self.config.get(name, {})
@@ -138,7 +140,8 @@ class Args:
 
     def dump_baysor_patchify(self):
         return (
-            str(self["segmentation"]["baysor"]) + f" --baysor-temp-dir {self.paths.baysor_temp_dir}"
+            str(self["segmentation"]["baysor"])
+            + f" --baysor-temp-dir {self.paths.smk_baysor_temp_dir}"
         )
 
     @classmethod
@@ -168,8 +171,15 @@ class Args:
     def baysor_prior_seg(self):
         if not self.baysor:
             return ""
-        key = self.config["segmentation"]["baysor"].get("cell_key", "cell")
-        return f":{key}"
+
+        key = self.config["segmentation"]["baysor"].get("cell_key")
+        if key is not None:
+            return f":{key}"
+
+        if "cellpose" in self.config["segmentation"]:
+            return ":cell"
+
+        return ""
 
     def min_area(self, method):
         params = self.config[method]

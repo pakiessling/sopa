@@ -27,6 +27,7 @@ def solve_conflicts(
     Returns:
         Array of resolved cells polygons
     """
+    cells = list(cells)
     n_cells = len(cells)
     resolved_indices = np.arange(n_cells)
 
@@ -63,40 +64,6 @@ def solve_conflicts(
     return unique_cells
 
 
-def expand_one(cell: Polygon, expand_radius: float) -> Polygon:
-    if expand_radius == 0:
-        return cell
-    return cell.buffer(expand_radius)
-
-
-def expand(cells: list[Polygon], expand_radius: float) -> list[Polygon]:
-    """Expand all cells radius
-
-    Args:
-        cells: List of cells as `shapely` polygons
-        expand_radius: Radius increase
-
-    Returns:
-        New list of polygons expanded by `expand_radius`
-    """
-    return [expand_one(cell, expand_radius) for cell in cells]
-
-
-def filter(cells: list[Polygon], min_area: float):
-    """Filter out cells that are too small
-
-    Args:
-        cells: List of `shapely` polygons
-        min_area: Minimum area to keep a cell
-
-    Returns:
-        List of filtered cells polygons
-    """
-    if min_area == 0:
-        return cells
-    return [cell for cell in cells if cell.area >= min_area]
-
-
 def _find_contours(cell_mask: np.ndarray) -> MultiPolygon:
     import cv2
 
@@ -111,9 +78,6 @@ def _ensure_polygon(cell: Polygon | MultiPolygon) -> Polygon:
         return cell
 
     if isinstance(cell, MultiPolygon):
-        log.warn(
-            f"""Geometry is composed of {len(cell.geoms)} polygons of areas: {[p.area for p in cell.geoms]}. Only the polygon corresponding to the largest area will be kept"""
-        )
         return max(cell.geoms, key=lambda polygon: polygon.area)
 
     log.warn(f"Invalid Polygon type: {type(cell)}. It will not be kept")
@@ -132,19 +96,27 @@ def _smoothen_cell(cell: MultiPolygon, smooth_radius: float, tolerance: float) -
         Shapely polygon representing the cell, or `None` if the cell was empty after smoothing
     """
     cell = MultiPolygon([geom for geom in cell.geoms if not geom.buffer(-smooth_radius).is_empty])
-    cell = cell.buffer(smooth_radius).buffer(-smooth_radius).simplify(tolerance)
+    cell = cell.buffer(smooth_radius).buffer(-smooth_radius).simplify(tolerance).buffer(0)
 
     return None if cell.is_empty else _ensure_polygon(cell)
 
 
+def _default_tolerance(mean_radius: float) -> float:
+    if mean_radius < 10:
+        return 0.5
+    if mean_radius < 20:
+        return 1
+    return 2
+
+
 def geometrize(
-    mask: np.ndarray, tolerance: float = 2, smooth_radius_ratio: float = 0.1
+    mask: np.ndarray, tolerance: float | None = None, smooth_radius_ratio: float = 0.1
 ) -> list[Polygon]:
     """Convert a cells mask to multiple `shapely` geometries. Inspired from https://github.com/Vizgen/vizgen-postprocessing
 
     Args:
         mask: A cell mask. Non-null values correspond to cell ids
-        tolerance: Tolerance parameter used by `shapely` during simplification
+        tolerance: Tolerance parameter used by `shapely` during simplification. By default, define the tolerance automatically.
 
     Returns:
         List of `shapely` polygons representing each cell ID of the mask
@@ -155,6 +127,9 @@ def geometrize(
 
     mean_radius = np.sqrt(np.array([cell.area for cell in cells]) / np.pi).mean()
     smooth_radius = mean_radius * smooth_radius_ratio
+
+    if tolerance is None:
+        tolerance = _default_tolerance(mean_radius)
 
     cells = [_smoothen_cell(cell, smooth_radius, tolerance) for cell in cells]
     return [cell for cell in cells if cell is not None]
