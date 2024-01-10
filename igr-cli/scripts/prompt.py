@@ -68,7 +68,9 @@ def prompt():
 
     data_path = data_dir / Path(tissue) / slide / region_name
 
-    if inquirer.confirm(message="Choose among existing an existing config?").execute():
+    if inquirer.confirm(
+        message="Choose among existing an existing config?", default=True
+    ).execute():
         config_dir = inquirer.fuzzy(
             message="First, select the technology associated to the config:",
             choices=search(workflow_dir / "config"),
