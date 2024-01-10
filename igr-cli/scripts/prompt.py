@@ -31,13 +31,16 @@ def search(
     return choices
 
 
-def run(data_path, config_path):
+def run(data_path: Path, config_path: str, suffix: str):
     (data_path / "images").mkdir(parents=True, exist_ok=True)
 
+    sdata_path = data_path.parent / f"{data_path.stem}{suffix}.zarr"
+
+    print(f"The SpatialData output will be {sdata_path}")
     print(f"Starting pipeline... (you can exit with ctrl+a+d)")
     try:
         subprocess.run(
-            f"""snakemake --config data_path={data_path} --configfile={config_path} --profile slurm --rerun-triggers mtime params input code""",
+            f"""snakemake --config data_path={data_path} sdata_path={sdata_path} --configfile={config_path} --profile slurm --rerun-triggers mtime params input code""",
             shell=True,
             check=True,
         )
@@ -65,20 +68,31 @@ def prompt():
 
     data_path = data_dir / Path(tissue) / slide / region_name
 
-    config_dir = inquirer.fuzzy(
-        message="Select a technology for the config:",
-        choices=search(workflow_dir / "config"),
-    ).execute()
+    if inquirer.confirm(message="Choose among existing an existing config?").execute():
+        config_dir = inquirer.fuzzy(
+            message="First, select the technology associated to the config:",
+            choices=search(workflow_dir / "config"),
+        ).execute()
 
-    config_path = inquirer.fuzzy(
-        message="Select a config:",
-        choices=search(
-            workflow_dir / "config" / config_dir, is_dir=False, suffix=".yaml", return_path=True
-        ),
+        config_path = inquirer.fuzzy(
+            message="Select a config:",
+            choices=search(
+                workflow_dir / "config" / config_dir, is_dir=False, suffix=".yaml", return_path=True
+            ),
+        ).execute()
+    else:
+        config_path = inquirer.text(
+            message="Write the absolute path to your YAML config file:"
+        ).execute()
+
+        assert Path(config_path).exists(), f"File {config_path} is not existing"
+
+    suffix = inquirer.text(
+        message="Add a suffix to your data directory name (left empty for default):"
     ).execute()
 
     if inquirer.confirm(message="Confirm? This will run the whole pipeline").execute():
-        run(data_path, config_path)
+        run(data_path, config_path, suffix)
 
 
 def main():
