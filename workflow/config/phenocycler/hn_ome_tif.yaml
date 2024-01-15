@@ -1,0 +1,32 @@
+read:
+  technology: ome_tif
+
+patchify:
+  patch_width_pixel: 3000
+  patch_overlap_pixel: 40
+
+segmentation:
+  cellpose:
+    diameter: 15
+    channels: ["DAPI"]
+    flow_threshold: 2
+    cellprob_threshold: -6
+    min_area: 75
+
+aggregate:
+  average_intensities: true
+  min_intensity_ratio: 0.1
+
+annotation:
+  method: fluorescence
+  args:
+    marker_cell_dict:
+      CK (Opal 780): Tumoral cell
+      CD3 (Opal 480): T cell
+      CD31 (Opal 690): Endothelial
+      FAP (Opal 520): Fibroblast
+      CD68 (Opal 620): Macrophage
+      CD20 (Opal 570): B cell
+
+explorer:
+  ram_threshold_gb: 8
