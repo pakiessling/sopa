@@ -1,10 +1,14 @@
 ## [1.0.5] - tbd
 
 ### Changed
-- Faster explorer image writing (default `chunksize` is the Xenium Explorer tile size).
+- Faster image writing for the Xenium Explorer (about x5 speedup)
+- Cellpose default model set to `"cyto3"` (new cellpose model)
 
 ### Added
 - Support for python 3.9 to 3.12 (we still recommend `python==3.10`)
+- Support WSI analysis (reader, tissue segmentation, patch embedding)
+- Supporting multiple region-of-interest queries
+- Can load a custom cellpose model using the `pretrained_model` argument
 
 ## [1.0.4] - 2024-02-14
 
