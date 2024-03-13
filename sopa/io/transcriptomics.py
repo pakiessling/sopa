@@ -46,7 +46,7 @@ def merscope(
     z_layers: int | list[int] | None = 3,
     region_name: str | None = None,
     slide_name: str | None = None,
-    backend: str = "dask_image",
+    backend: str = "rioxarray",
     imread_kwargs: Mapping[str, Any] = MappingProxyType({}),
     image_models_kwargs: Mapping[str, Any] = MappingProxyType({}),
 ) -> SpatialData:
