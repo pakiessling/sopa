@@ -13,6 +13,9 @@ def main(args):
         ad_sp,
         adata_sc,
         cell_type_key="ct",
+        reference_preprocessing=None,
+        bag_size=10_000,
+        max_obs_reference=10_000,
     ).run()
 
     ad_sp.write_h5ad(args.output)
