@@ -7,6 +7,10 @@ from sopa.annotation.tangram.run import MultiLevelAnnotation
 
 def main(args):
     ad_sp = anndata.read_h5ad(args.path_spatial)
+
+    if "sopa_attrs" not in ad_sp.uns:
+        ad_sp.uns["sopa_attrs"] = {}
+
     adata_sc = anndata.read_h5ad(args.path_reference)
 
     MultiLevelAnnotation(
