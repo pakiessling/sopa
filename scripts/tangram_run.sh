@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=tangram
-#SBATCH --output=/mnt/beegfs/sopa/workflow/logs/%j
+#SBATCH --output=/mnt/beegfs/merfish/sopa/workflow/logs/%j
 #SBATCH --mem=40G
 #SBATCH --cpus-per-task=8
 #SBATCH --partition=gpgpuq
