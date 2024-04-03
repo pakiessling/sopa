@@ -37,7 +37,7 @@ def run(data_path: Path, config_path: str, suffix: str):
     sdata_path = data_path.parent / f"{data_path.stem}{suffix}.zarr"
 
     print(f"The SpatialData output will be {sdata_path}")
-    print(f"Starting pipeline... (you can exit with ctrl+a+d)")
+    print("Starting pipeline... (you can exit with ctrl+a+d)")
     try:
         subprocess.run(
             f"""snakemake --config data_path={data_path} sdata_path={sdata_path} --configfile={config_path} --profile slurm --rerun-triggers mtime params input code""",
