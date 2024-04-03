@@ -13,7 +13,7 @@ from spatialdata import SpatialData
 from spatialdata.transformations import Affine, set_transformation
 from tqdm import tqdm
 
-from ..._sdata import get_intrinsic_cs, get_spatial_image
+from ..._sdata import get_intrinsic_cs, get_spatial_image, save_image
 from ...utils.image import resize_numpy, scale_dtype
 from ._constants import ExplorerConstants, FileNames, image_metadata
 from .utils import explorer_file_path
@@ -221,7 +221,8 @@ def align(
     default_image = get_spatial_image(sdata, image_key)
     pixel_cs = get_intrinsic_cs(sdata, default_image)
 
-    set_transformation(image, to_pixel, pixel_cs)
+    set_transformation(image, {pixel_cs: to_pixel}, set_all=True)
 
     log.info(f"Adding image {image_name}:\n{image}")
-    sdata.add_image(image_name, image, overwrite=overwrite)
+    sdata.images[image_name] = image
+    save_image(sdata, image_name, overwrite=overwrite)

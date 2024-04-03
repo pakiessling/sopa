@@ -25,6 +25,8 @@ from .._sdata import (
     get_element,
     get_item,
     get_spatial_image,
+    save_shapes,
+    save_table,
     to_intrinsic,
 )
 from ..io.explorer.utils import str_cell_id
@@ -61,19 +63,20 @@ class Aggregator:
             self.shapes_key = shapes_key
             self.geo_df = self.sdata[shapes_key]
 
-        if sdata.table is not None and len(self.geo_df) != sdata.table.n_obs:
-            log.warn(
-                f"Table already existing with {sdata.table.n_obs} obs, but aggregating on {len(self.geo_df)} cells. Deleting table."
-            )
-            del sdata.table
-
-        self.table = sdata.table
+        self.table = None
+        if SopaKeys.TABLE in sdata.tables:
+            table = sdata.tables[SopaKeys.TABLE]
+            if len(self.geo_df) != table.n_obs:
+                log.warn("Not using existing table (aggregating on a different number of cells)")
+            else:
+                self.table = table
 
     def standardize_table(self):
         self.table.obs_names = list(map(str_cell_id, range(self.table.n_obs)))
 
         self.geo_df.index = list(self.table.obs_names)
-        self.sdata.add_shapes(self.shapes_key, self.geo_df, overwrite=True)
+        self.sdata.shapes[self.shapes_key] = self.geo_df
+        save_shapes(self.sdata, self.shapes_key, overwrite=True)
 
         self.table.obsm["spatial"] = np.array(
             [[centroid.x, centroid.y] for centroid in self.geo_df.centroid]
@@ -98,9 +101,8 @@ class Aggregator:
             instance_key=SopaKeys.INSTANCE_KEY,
         )
 
-        if self.sdata.table is not None and self.overwrite:
-            del self.sdata.table
-        self.sdata.table = self.table
+        self.sdata.tables[SopaKeys.TABLE] = self.table
+        save_table(self.sdata, SopaKeys.TABLE)
 
     def filter_cells(self, where_filter: np.ndarray):
         log.info(f"Filtering {where_filter.sum()} cells")
@@ -148,7 +150,7 @@ class Aggregator:
             mean_intensities = average_channels(
                 self.sdata,
                 image_key=self.image_key,
-                shapes_key=self.shapes_key,
+                geo_df=self.geo_df,
                 expand_radius_ratio=expand_radius_ratio,
             )
 
@@ -186,6 +188,7 @@ def average_channels(
     sdata: SpatialData,
     image_key: str = None,
     shapes_key: str = None,
+    geo_df: gpd.GeoDataFrame | None = None,
     expand_radius_ratio: float = 0,
 ) -> np.ndarray:
     """Average channel intensities per cell.
@@ -194,6 +197,7 @@ def average_channels(
         sdata: A `SpatialData` object
         image_key: Key of `sdata` containing the image. If only one `images` element, this does not have to be provided.
         shapes_key: Key of `sdata` containing the cell boundaries. If only one `shapes` element, this does not have to be provided.
+        geo_df: `GeoDataFrame` used instead of `shapes_key` if the shapes are not inside `sdata`
         expand_radius_ratio: Cells polygons will be expanded by `expand_radius_ratio * mean_radius`. This help better aggregate boundary stainings.
 
     Returns:
@@ -201,7 +205,8 @@ def average_channels(
     """
     image = get_spatial_image(sdata, image_key)
 
-    geo_df = get_element(sdata, "shapes", shapes_key)
+    if not isinstance(geo_df, gpd.GeoDataFrame):
+        geo_df = get_element(sdata, "shapes", shapes_key)
     geo_df = to_intrinsic(sdata, geo_df, image)
 
     expand_radius = expand_radius_ratio * np.mean(np.sqrt(geo_df.area / np.pi))

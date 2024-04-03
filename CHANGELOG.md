@@ -1,11 +1,47 @@
-## [1.0.6] - tbd
+## [1.0.10] - tbd
+
+### Changed
+- Default `min_molecules_per_cell` set to 1 in snakemake configs (fix #37)
+- Default `min_transcripts` set in snakemake configs
+
+## [1.0.9] - 2024-04-03
+
+### Added:
+- Support multiple tables
+
+### Fixed
+- Spatial elements not saved when data is not backed
+
+## [1.0.8] - 2024-04-02
+
+Hotfix: resolve issues related to `spatialdata>=1.0.0`
+
+## [1.0.7] - 2024-03-29
+
+### Changed
+- Improvements in the CLI and API tutorials
+- Sequential segmentation now requires `patchify` to be run independently
+- Dependency `spatialdata>=0.1.1`
+
+### Added
+- Kwargs can be provided to Cellpose model init
+
+### Fixed
+- `set_transformation` issue for image alignment
+- Import issue #37 #39
+
+## [1.0.6] - 2024-03-13
 
 ### Added
 - Spatial join between shapes (`from sdata.spatial import sjoin`)
 - H&E tutorial (basic usage)
+- New backend for the MERSCOPE reader (requires `rioxarray`, currently experimental, should use less RAM)
 
-## Changed
+### Changed
 - Using `MultiscaleSpatialImage` by default for multiplex imaging technologies
+
+### Fixed
+- Issue in report creation when channel names are integers
 
 ## [1.0.5] - 2024-03-01
 
