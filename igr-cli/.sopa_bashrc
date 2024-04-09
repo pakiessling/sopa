@@ -3,7 +3,7 @@ GLUSTER_MERFISH=/mnt/glustergv0/MERFISH
 
 function scat {
   file_name="$1"
-  folder_list=("/mnt/beegfs/merfish/logs" "/mnt/beegfs/userdata/$USER/.jobs_outputs" "/mnt/beegfs/merfish/sopa/workflow/.snakemake/log" "/mnt/beegfs/merfish/sopa/workflow/logs")
+  folder_list=("/mnt/beegfs/merfish/logs" "/mnt/beegfs/userdata/$USER/.jobs_outputs" "/mnt/beegfs/merfish/sopa/workflow/.snakemake/log" "/mnt/beegfs/merfish/sopa/workflow/logs" "/mnt/beegfs/userdata/q_blampey/sopa/workflow/logs" "/mnt/beegfs/userdata/q_blampey/sopa/workflow/.snakemake/log")
 
   for folder in "${folder_list[@]}"; do
     if [ -d "$folder" ]; then
