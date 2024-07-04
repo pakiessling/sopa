@@ -300,16 +300,35 @@ def average_channels(
     shapes_key: str = None,
     expand_radius_ratio: float = 0,
 ) -> np.ndarray:
+    return aggregate_channels(
+        sdata, image_key=image_key, shapes_key=shapes_key, expand_radius_ratio=expand_radius_ratio
+    )
+
+
+SUPPORTED_AGGREGATIONS = ["mean", "sum", "std", "max"]
+
+
+def aggregate_channels(
+    sdata: SpatialData,
+    func: str | list[str] = "mean",
+    image_key: str = None,
+    shapes_key: str = None,
+    expand_radius_ratio: float = 0,
+) -> np.ndarray | dict[str, np.ndarray]:
     """Average channel intensities per cell.
+
+    !!! info
+        If you only want to average the channels intensities, you can use the `Aggregator` class.
 
     Args:
         sdata: A `SpatialData` object
+        func: Function(s) used for aggregation. By default, the mean is used. Valid strings are: `mean`, `sum`, `std`, `max`.
         image_key: Key of `sdata` containing the image. If only one `images` element, this does not have to be provided.
         shapes_key: Key of `sdata` containing the cell boundaries. If only one `shapes` element, this does not have to be provided.
         expand_radius_ratio: Cells polygons will be expanded by `expand_radius_ratio * mean_radius`. This help better aggregate boundary stainings.
 
     Returns:
-        A numpy `ndarray` of shape `(n_cells, n_channels)`
+        A numpy `ndarray` of shape `(n_cells, n_channels)` if one function is used. Else, a dictionnary whose keys are the function names and the values have a shape `(n_cells, n_channels)`.
     """
     image = get_spatial_image(sdata, image_key)
 
@@ -321,14 +340,23 @@ def average_channels(
     if expand_radius > 0:
         geo_df = geo_df.buffer(expand_radius)
 
+    if isinstance(func, str):
+        func = [func]
+
+    assert all(
+        f in SUPPORTED_AGGREGATIONS for f in func
+    ), f"Invalid function(s) provided. Supported functions are: {SUPPORTED_AGGREGATIONS}"
+
     log.info(
-        f"Averaging channels intensity over {len(geo_df)} cells with expansion {expand_radius}"
+        f"Aggregating channels intensity over {len(geo_df)} cells with expansion {expand_radius}"
     )
-    return _average_channels_aligned(image, geo_df)
+    return _aggregate_channels_aligned(image, geo_df, func)
 
 
-def _average_channels_aligned(
-    image: DataArray, geo_df: gpd.GeoDataFrame | list[Polygon]
+def _aggregate_channels_aligned(
+    image: DataArray,
+    geo_df: gpd.GeoDataFrame | list[Polygon],
+    func: list[str],
 ) -> np.ndarray:
     """Average channel intensities per cell. The image and cells have to be aligned, i.e. be on the same coordinate system.
 
@@ -342,7 +370,9 @@ def _average_channels_aligned(
     cells = geo_df if isinstance(geo_df, list) else list(geo_df.geometry)
     tree = shapely.STRtree(cells)
 
-    intensities = np.zeros((len(cells), len(image.coords["c"])))
+    aggregated_channels_dict = {
+        name: np.zeros((len(cells), len(image.coords["c"]))) for name in func
+    }
     areas = np.zeros(len(cells))
 
     chunk_sizes = image.data.chunks
@@ -371,8 +401,9 @@ def _average_channels_aligned(
 
             mask = shapes.rasterize(cell, sub_image.shape[1:], bounds)
 
-            intensities[index] += np.sum(sub_image * mask, axis=(1, 2))
             areas[index] += np.sum(mask)
+            for name, f in func.items():
+                aggregated_channels_dict[name][index] += np.sum(sub_image * mask, axis=(1, 2))
 
     with ProgressBar():
         tasks = [
@@ -382,7 +413,16 @@ def _average_channels_aligned(
         ]
         dask.compute(tasks)
 
-    return intensities / areas[:, None].clip(1)
+    return aggregated_channels_dict["mean"] / areas[:, None].clip(1)
+
+
+# def _fill_aggregated_channels_dict(aggregated_channels_dict: dict[str, np.ndarray], f: str):
+#     if f == "mean" or f == "sum":
+#         aggregated_channels_dict[name][index] += np.sum(sub_image * mask, axis=(1, 2))
+#     elif f == "max":
+#         aggregated_channels_dict[name][index] = np.max(sub_image * mask, axis=(1, 2))
+#     elif f == "std":
+#         sub_image[:, mask].std()
 
 
 def count_transcripts(
