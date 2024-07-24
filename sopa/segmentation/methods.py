@@ -51,7 +51,7 @@ def cellpose_patch(
         raise ValueError(f"Provide 1 or 2 channels. Found {len(channels)}")
 
     def _(patch: np.ndarray):
-        mask, *_ = model.eval(patch, diameter=diameter, channels=channels, **cellpose_eval_kwargs)
+        mask, *_ = model.eval(patch, diameter=diameter, channels=channels,resample=False, **cellpose_eval_kwargs)
         return mask
 
     return _
